@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Shopping list example</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
+    <style>
+      * {font-family: 'Fira Sans', sans-serif;}
+      .checklist {
+        min-height: 500px;
+        list-style: none;
+        padding: 0;
+        max-width: 400px;
+      }
+      .checklist li {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #dadada;
+      }
+      li button {
+        font-size: 10px;
+        text-transform: uppercase;
+        margin-left: 20px;
+        color: #888;
+        margin-left: auto;
+      }
+      .comp {
+        margin-right: 7px;
+      }
+      .done {
+        text-decoration: line-through;
+      }
+      .count{font-weight: bold;}
+    </style>
+  </head>
+  <body>
+
+    <h1>My Tasks</h1>
+
+    <div>
+      <form action="">
+        <input type="text" name="item" id="item">
+        <button type="submit">Add item</button>
+      </form>
+    </div>
+
+    <ul class="checklist">
+
+    </ul>
+
+    <div>
+      სულ დასრულებულია <span class="count">0</span> დავალება.
+    </div>
+
+    <script>
+      const ul = document.querySelector('ul');
+      const input = document.querySelector('input');
+      const button = document.querySelector('button');
+      const form = document.querySelector('form');
+      const count = document.querySelector('.count');
+
+      let checkCount = 0;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        let myItem = input.value;
+
+        const listItem = document.createElement('li');
+        const listText = document.createElement('span');
+        const deleteBtn = document.createElement('button');
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute("type", "checkbox");
+        checkbox.classList.add('comp');
+
+        listItem.appendChild(checkbox);
+        listItem.appendChild(listText);
+        listText.textContent = myItem;
+        listItem.appendChild(deleteBtn);
+        deleteBtn.textContent = 'Delete';
+        ul.appendChild(listItem);
+
+        checkbox.addEventListener( 'change', function() {
+          listText.classList.toggle('done');
+          if(this.checked) {
+            checkCount++
+          } else {
+            checkCount--
+          }
+          count.textContent = checkCount;
+        });
+
+        deleteBtn.addEventListener('click', () => {
+          ul.removeChild(listItem);
+        })
+
+        input.value = '';
+        input.focus();
+      })
+    </script>
+  </body>
+</html>
