@@ -4,35 +4,20 @@
   <head>
     <meta charset="utf-8">
     <title>Shopping list example</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
     <style>
-      * {font-family: 'Fira Sans', sans-serif;}
-      .checklist {
-        min-height: 500px;
-        list-style: none;
-        padding: 0;
-        max-width: 400px;
+      li {
+        margin-bottom: 10px;
       }
-      .checklist li {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-        border-bottom: 1px solid #dadada;
-      }
+
       li button {
-        font-size: 10px;
-        text-transform: uppercase;
+        font-size: 8px;
         margin-left: 20px;
-        color: #888;
-        margin-left: auto;
+        color: #666;
       }
-      .comp {
-        margin-right: 7px;
-      }
-      .done {
+
+      .checked {
         text-decoration: line-through;
       }
-      .count{font-weight: bold;}
     </style>
   </head>
   <body>
@@ -46,59 +31,112 @@
       </form>
     </div>
 
-    <ul class="checklist">
+    <ul>
 
     </ul>
-
-    <div>
-      სულ დასრულებულია <span class="count">0</span> დავალება.
-    </div>
 
     <script>
       const ul = document.querySelector('ul');
       const input = document.querySelector('input');
       const button = document.querySelector('button');
       const form = document.querySelector('form');
-      const count = document.querySelector('.count');
 
-      let checkCount = 0;
+      fetch('https://us-central1-js04-b4877.cloudfunctions.net/tasks', {
+        method: 'GET',
+      })
+        .then(response => response.json())
+        .then(data => {
+          const tasks = data.data;
+          tasks.sort(function(a, b) {
+            return a.create_time - b.create_time;
+          });
+          tasks.forEach(task => {
+            createTaskUI(task.text, task.id, task.completed);
+          })
+          
+        });
 
       form.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        let myItem = input.value;
+        let inputValue = input.value;
 
-        const listItem = document.createElement('li');
-        const listText = document.createElement('span');
-        const deleteBtn = document.createElement('button');
-        const checkbox = document.createElement('input');
-        checkbox.setAttribute("type", "checkbox");
-        checkbox.classList.add('comp');
-
-        listItem.appendChild(checkbox);
-        listItem.appendChild(listText);
-        listText.textContent = myItem;
-        listItem.appendChild(deleteBtn);
-        deleteBtn.textContent = 'Delete';
-        ul.appendChild(listItem);
-
-        checkbox.addEventListener( 'change', function() {
-          listText.classList.toggle('done');
-          if(this.checked) {
-            checkCount++
-          } else {
-            checkCount--
-          }
-          count.textContent = checkCount;
-        });
-
-        deleteBtn.addEventListener('click', () => {
-          ul.removeChild(listItem);
-        })
+        createTask(inputValue);
 
         input.value = '';
         input.focus();
       })
+
+      function createTask(text) {
+        fetch('https://us-central1-js04-b4877.cloudfunctions.net/tasks/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({text: text})
+        })
+        .then(response => response.json())
+        .then(data => {
+          createTaskUI(text, data.id, false);
+        })
+      }
+
+      function checkTask(id) {
+        fetch('https://us-central1-js04-b4877.cloudfunctions.net/tasks/check/'+id, {
+          method: 'POST',
+        })
+        .then(response => response.json())
+      }
+
+      function unCheckTask(id) {
+        fetch('https://us-central1-js04-b4877.cloudfunctions.net/tasks/uncheck/'+id, {
+          method: 'POST',
+        })
+        .then(response => response.json())
+      }
+
+      function deleteTask (id) {
+        fetch('https://us-central1-js04-b4877.cloudfunctions.net/tasks/'+id, {
+          method: 'DELETE',
+        })
+        .then(response => response.json())
+      }
+
+      function createTaskUI(text, id, status) {
+        const listItem = document.createElement('li');
+        const listText = document.createElement('span');
+        const deleteBtn = document.createElement('button');
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        checkbox.checked = status;
+
+        if (status) {
+          listItem.classList.add('checked');
+        }
+
+        listItem.setAttribute('data-id', id);
+        listItem.appendChild(checkbox);
+        listItem.appendChild(listText);
+        listText.textContent = text;
+        listItem.appendChild(deleteBtn);
+        deleteBtn.textContent = 'Delete';
+        ul.appendChild(listItem);
+
+        deleteBtn.addEventListener('click', () => {
+          ul.removeChild(listItem);
+          deleteTask(id);
+        });
+
+        checkbox.addEventListener('change', (e) => {
+          listItem.classList.toggle('checked');
+          if (checkbox.checked) {
+            checkTask(id);  
+          } else {
+            unCheckTask(id);
+          }
+          // let id = listItem.dataset.id;
+        });
+      }
     </script>
   </body>
 </html>
